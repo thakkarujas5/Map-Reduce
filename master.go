@@ -14,7 +14,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	master := master.MakeMaster(os.Args[1:], 10)
+	master.MakeMaster(os.Args[1:], 10)
 	x := shared.Map("example.txt")
 	fmt.Print(x)
 }

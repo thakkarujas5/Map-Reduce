@@ -1,11 +1,12 @@
 package master
 
 import (
-	"fmt"
-	"os"
-	"sync"
-
+	"log"
 	"mr/shared"
+	"net"
+	"net/http"
+	"net/rpc"
+	"sync"
 )
 
 type Master struct {
@@ -14,6 +15,19 @@ type Master struct {
 	reduceTasks []shared.Task
 	nMap        int
 	nReduce     int
+}
+
+func (m *Master) server() {
+	rpc.Register(m)
+	rpc.HandleHTTP()
+
+	listener, err := net.Listen("tcp", ":1234")
+	if err != nil {
+		log.Fatal("Listen error:", err)
+	}
+
+	log.Println("RPC server listening on port 1234")
+	http.Serve(listener, nil)
 }
 
 func MakeMaster(files []string, reduceTasks int) *Master {
@@ -26,14 +40,12 @@ func MakeMaster(files []string, reduceTasks int) *Master {
 	master.mapTasks = make([]shared.Task, 0, mapTasks)
 	master.reduceTasks = make([]shared.Task, 0, reduceTasks)
 
-}
-func main() {
-
-	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "No Input Files provided ")
-		os.Exit(1)
+	for i := 0; i < mapTasks; i++ {
+		mTask := shared.Task{Type: shared.MapTask, Status: shared.NotStarted, Index: i, File: files[i], WorkerId: -1}
+		master.mapTasks = append(master.mapTasks, mTask)
 	}
 
-	x := shared.Map("example.txt")
-	fmt.Print(x)
+	master.server()
+
+	return &master
 }
