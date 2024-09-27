@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"mr/master"
 	"mr/shared"
 	"os"
 )
@@ -14,7 +13,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	master := master.MakeMaster(os.Args[1:], 10)
 	x := shared.Map("example.txt")
 	fmt.Print(x)
 }

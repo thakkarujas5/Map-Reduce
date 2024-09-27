@@ -1,4 +1,4 @@
-package main
+package shared
 
 import (
 	"bufio"
@@ -7,6 +7,30 @@ import (
 	"os"
 	"strconv"
 )
+
+type TaskStatus int
+type TaskType int
+
+const (
+	MapTask TaskType = iota
+	ReduceTask
+	NoTask
+	ExitTask
+)
+
+const (
+	NotStarted TaskStatus = iota
+	Executing
+	Finished
+)
+
+type Task struct {
+	Type     TaskType
+	Status   TaskStatus
+	Index    int
+	File     string
+	WorkerId int
+}
 
 func Map(fileName string) []worker.KeyValue {
 
