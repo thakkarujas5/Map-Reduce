@@ -62,3 +62,11 @@ func Map(fileName string) []worker.KeyValue {
 func Reduce(values []string) string {
 	return strconv.Itoa(len(values))
 }
+
+type GetMapTaskArgs struct {
+}
+
+type GetMapTaskReply struct {
+	Task Task
+	Ok   bool
+}

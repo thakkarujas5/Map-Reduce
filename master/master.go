@@ -1,6 +1,7 @@
 package master
 
 import (
+	"fmt"
 	"log"
 	"mr/shared"
 	"net"
@@ -30,6 +31,37 @@ func (m *Master) server() {
 	http.Serve(listener, nil)
 }
 
+func (m *Master) GetTask(args *shared.GetMapTaskArgs, reply *shared.GetMapTaskReply) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	fmt.Println("here")
+	for i, task := range m.mapTasks {
+		if task.Status == shared.NotStarted {
+			m.mapTasks[i].Status = shared.InProgress
+			reply.Task = m.mapTasks[i]
+			reply.Ok = true
+			return nil
+		}
+	}
+
+	// } else if taskType == shared.ReduceTask {
+	// 	// Check if all map tasks are completed before assigning reduce tasks
+	// 	if !m.allMapTasksCompleted() {
+	// 		return shared.Task{}, errors.New("map tasks not completed yet")
+	// 	}
+
+	// 	// Check for available reduce tasks
+	// 	for i, task := range m.reduceTasks {
+	// 		if task.Status == shared.NotStarted {
+	// 			m.reduceTasks[i].Status = shared.InProgress
+	// 			return m.reduceTasks[i], nil
+	// 		}
+	// 	}
+	// }
+
+	return nil
+}
+
 func MakeMaster(files []string, reduceTasks int) *Master {
 
 	master := Master{}
@@ -49,7 +81,7 @@ func MakeMaster(files []string, reduceTasks int) *Master {
 		rTask := shared.Task{Type: shared.ReduceTask, Status: shared.NotStarted, Index: i, File: "", WorkerId: -1}
 		master.reduceTasks = append(master.reduceTasks, rTask)
 	}
-
+	fmt.Println(master.mapTasks)
 	master.server()
 
 	return &master
