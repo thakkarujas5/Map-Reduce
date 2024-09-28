@@ -20,6 +20,7 @@ const (
 
 const (
 	NotStarted TaskStatus = iota
+	InProgress
 	Executing
 	Finished
 )

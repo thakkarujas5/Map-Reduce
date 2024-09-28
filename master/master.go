@@ -45,7 +45,19 @@ func MakeMaster(files []string, reduceTasks int) *Master {
 		master.mapTasks = append(master.mapTasks, mTask)
 	}
 
+	for i := 0; i < reduceTasks; i++ {
+		rTask := shared.Task{Type: shared.ReduceTask, Status: shared.NotStarted, Index: i, File: "", WorkerId: -1}
+		master.reduceTasks = append(master.reduceTasks, rTask)
+	}
+
 	master.server()
 
 	return &master
+}
+
+func (m *Master) GetReduceCount() int {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	return len(m.reduceTasks)
 }
