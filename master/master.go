@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/rpc"
+	"os"
 	"sync"
 )
 
@@ -31,10 +32,31 @@ func (m *Master) server() {
 	http.Serve(listener, nil)
 }
 
+func (m *Master) ReportTask(args *shared.ReportMapTaskArgs, reply *shared.ReportMapTaskReply) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for i, t := range m.mapTasks {
+		if t.Index == args.Task.Index {
+			m.mapTasks[i].Status = shared.Finished
+			return nil
+		}
+	}
+
+	return fmt.Errorf("task with index %d not found", args.Task.Index)
+}
+
+func (m *Master) GetReduceCount(args *shared.GetReduceCountArgs, reply *shared.GetReduceCountReply) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	reply.Count = len(m.reduceTasks)
+	return nil
+}
+
 func (m *Master) GetTask(args *shared.GetMapTaskArgs, reply *shared.GetMapTaskReply) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	fmt.Println("here")
 	for i, task := range m.mapTasks {
 		if task.Status == shared.NotStarted {
 			m.mapTasks[i].Status = shared.InProgress
@@ -81,15 +103,13 @@ func MakeMaster(files []string, reduceTasks int) *Master {
 		rTask := shared.Task{Type: shared.ReduceTask, Status: shared.NotStarted, Index: i, File: "", WorkerId: -1}
 		master.reduceTasks = append(master.reduceTasks, rTask)
 	}
+
+	err := os.Mkdir(shared.TempDir, 0755)
+	if err != nil {
+		log.Fatalf("Cannot create temp directory %v\n", shared.TempDir)
+	}
 	fmt.Println(master.mapTasks)
 	master.server()
 
 	return &master
-}
-
-func (m *Master) GetReduceCount() int {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	return len(m.reduceTasks)
 }

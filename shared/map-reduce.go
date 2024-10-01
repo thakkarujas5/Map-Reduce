@@ -8,6 +8,8 @@ import (
 	"strconv"
 )
 
+const TempDir = "./tmp"
+
 type TaskStatus int
 type TaskType int
 
@@ -69,4 +71,18 @@ type GetMapTaskArgs struct {
 type GetMapTaskReply struct {
 	Task Task
 	Ok   bool
+}
+
+type ReportMapTaskArgs struct {
+	Task Task
+}
+
+type ReportMapTaskReply struct {
+}
+
+type GetReduceCountArgs struct {
+}
+
+type GetReduceCountReply struct {
+	Count int
 }
