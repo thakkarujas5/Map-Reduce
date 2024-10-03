@@ -2,10 +2,12 @@ package shared
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
+	"log"
 	"mr/worker"
 	"os"
-	"strconv"
+	"path/filepath"
 )
 
 const TempDir = "./tmp"
@@ -61,8 +63,33 @@ func Map(fileName string) []worker.KeyValue {
 	return kva
 }
 
-func Reduce(values []string) string {
-	return strconv.Itoa(len(values))
+func Reduce(index int) map[string][]string {
+	files, err := filepath.Glob(fmt.Sprintf("%v/mr-%v-%v", TempDir, "*", index))
+	if err != nil {
+		fmt.Printf("Error reading file: %v\n", err)
+	}
+
+	kvMap := make(map[string][]string)
+	var kv worker.KeyValue
+
+	for _, filePath := range files {
+		file, err := os.Open(filePath)
+		checkError(err, "Cannot open file %v\n", filePath)
+
+		dec := json.NewDecoder(file)
+		for dec.More() {
+			err = dec.Decode(&kv)
+			checkError(err, "Cannot decode from file %v\n", filePath)
+			kvMap[kv.Key] = append(kvMap[kv.Key], kv.Value)
+		}
+	}
+
+	return kvMap
+}
+
+func performReduce(reduceArray []string) {
+	fmt.Println("arr: ", reduceArray)
+
 }
 
 type GetMapTaskArgs struct {
@@ -85,4 +112,18 @@ type GetReduceCountArgs struct {
 
 type GetReduceCountReply struct {
 	Count int
+}
+
+type GetReduceTaskArgs struct {
+}
+
+type GetReduceTaskReply struct {
+	Task Task
+	Ok   bool
+}
+
+func checkError(err error, format string, v ...interface{}) {
+	if err != nil {
+		log.Fatalf(format, v)
+	}
 }

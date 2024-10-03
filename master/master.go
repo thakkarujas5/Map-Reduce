@@ -39,6 +39,7 @@ func (m *Master) ReportTask(args *shared.ReportMapTaskArgs, reply *shared.Report
 	for i, t := range m.mapTasks {
 		if t.Index == args.Task.Index {
 			m.mapTasks[i].Status = shared.Finished
+			m.nMap--
 			return nil
 		}
 	}
@@ -51,6 +52,35 @@ func (m *Master) GetReduceCount(args *shared.GetReduceCountArgs, reply *shared.G
 	defer m.mu.Unlock()
 
 	reply.Count = len(m.reduceTasks)
+	return nil
+}
+
+func (m *Master) GetReduceTask(args *shared.GetReduceTaskArgs, reply *shared.GetReduceTaskReply) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.nMap > 0 {
+		reply.Task = shared.Task{Type: shared.NoTask, Status: shared.NotStarted, Index: -1, File: "", WorkerId: -1}
+		reply.Ok = false
+		return nil
+	}
+
+	if m.nReduce == 0 {
+		reply.Task = shared.Task{Type: shared.ExitTask, Status: shared.NotStarted, Index: -1, File: "", WorkerId: -1}
+		reply.Ok = true
+		return nil
+	}
+
+	for i, task := range m.reduceTasks {
+		if task.Status == shared.NotStarted {
+			m.reduceTasks[i].Status = shared.InProgress
+			reply.Task = m.reduceTasks[i]
+			reply.Ok = true
+			return nil
+		}
+	}
+
+	reply.Ok = false
 	return nil
 }
 
@@ -108,7 +138,7 @@ func MakeMaster(files []string, reduceTasks int) *Master {
 	if err != nil {
 		log.Fatalf("Cannot create temp directory %v\n", shared.TempDir)
 	}
-	fmt.Println(master.mapTasks)
+	//	fmt.Println(master.mapTasks)
 	master.server()
 
 	return &master

@@ -70,6 +70,7 @@ func writeMapOutput(kva []worker.KeyValue, mapId int) {
 	// use io buffers to reduce disk I/O, which greatly improves
 	// performance when running in containers with mounted volumes
 	prefix := fmt.Sprintf("%v/mr-%v", shared.TempDir, mapId)
+	//fmt.Println("prefix:", prefix)
 	files := make([]*os.File, 0, nReduce)
 	buffers := make([]*bufio.Writer, 0, nReduce)
 	encoders := make([]*json.Encoder, 0, nReduce)
@@ -77,9 +78,7 @@ func writeMapOutput(kva []worker.KeyValue, mapId int) {
 	// create temp files, use pid to uniquely identify this worker
 	for i := 0; i < nReduce; i++ {
 		filePath := fmt.Sprintf("%v-%v-%v", prefix, i, os.Getpid())
-		//fmt.Println("path:", filePath)
 		file, err := os.Create(filePath)
-		fmt.Println(err)
 		checkError(err, "Cannot create file %v\n", filePath)
 		buf := bufio.NewWriter(file)
 		files = append(files, file)
@@ -124,7 +123,6 @@ func (w *MapWorker) run() {
 
 		if task.Type == shared.MapTask {
 			kv := shared.Map(task.File)
-			fmt.Println(kv)
 			writeMapOutput(kv, task.Index)
 			reportMapTask(w.client, task)
 		}
