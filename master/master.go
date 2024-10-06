@@ -88,6 +88,12 @@ func (m *Master) GetReduceTask(args *shared.GetReduceTaskArgs, reply *shared.Get
 func (m *Master) GetTask(args *shared.GetMapTaskArgs, reply *shared.GetMapTaskReply) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	if m.nMap == 0 {
+		reply.Task = shared.Task{Type: shared.ExitTask, Status: shared.NotStarted, Index: -1, File: "", WorkerId: -1}
+		reply.Ok = false
+	}
+
 	for i, task := range m.mapTasks {
 		if task.Status == shared.NotStarted {
 			m.mapTasks[i].Status = shared.InProgress

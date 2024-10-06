@@ -116,6 +116,11 @@ func (w *MapWorker) run() {
 	for {
 		task, ok := getMapTask(w.client)
 
+		if task.Type == shared.ExitTask {
+			fmt.Println("Exit task signal")
+			return
+		}
+
 		if !ok {
 			time.Sleep(100 * time.Millisecond)
 			continue
