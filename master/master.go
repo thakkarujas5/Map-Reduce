@@ -119,21 +119,6 @@ func (m *Master) GetTask(args *shared.GetMapTaskArgs, reply *shared.GetMapTaskRe
 		}
 	}
 
-	// } else if taskType == shared.ReduceTask {
-	// 	// Check if all map tasks are completed before assigning reduce tasks
-	// 	if !m.allMapTasksCompleted() {
-	// 		return shared.Task{}, errors.New("map tasks not completed yet")
-	// 	}
-
-	// 	// Check for available reduce tasks
-	// 	for i, task := range m.reduceTasks {
-	// 		if task.Status == shared.NotStarted {
-	// 			m.reduceTasks[i].Status = shared.InProgress
-	// 			return m.reduceTasks[i], nil
-	// 		}
-	// 	}
-	// }
-
 	return nil
 }
 
@@ -192,7 +177,6 @@ func MakeMaster(files []string, reduceTasks int) *Master {
 	if err != nil {
 		log.Fatalf("Cannot create temp directory %v\n", shared.TempDir)
 	}
-	//	fmt.Println(master.mapTasks)
 	master.server()
 
 	return &master
