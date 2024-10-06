@@ -107,6 +107,13 @@ type ReportMapTaskArgs struct {
 type ReportMapTaskReply struct {
 }
 
+type ReportReduceTaskArgs struct {
+	Task Task
+}
+
+type ReportReduceTaskReply struct {
+}
+
 type GetReduceCountArgs struct {
 }
 

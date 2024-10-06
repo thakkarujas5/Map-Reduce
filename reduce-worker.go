@@ -58,15 +58,30 @@ func checkError(err error, format string, v ...interface{}) {
 	}
 }
 
+func reportReduceTask(client *rpc.Client, task shared.Task) {
+	args := shared.ReportReduceTaskArgs{Task: task}
+	reply := shared.ReportReduceTaskReply{}
+
+	err := client.Call("Master.ReportReduceTask", &args, &reply)
+	if err != nil {
+		fmt.Print(err)
+	}
+}
+
 func (w *ReduceWorker) run() {
 
 	for {
 		task, ok := getReduceTask(w.client)
 
+		if task.Type == shared.ExitTask {
+			fmt.Println("All reduce tasks finished")
+			return
+		}
+
 		kvMap := shared.Reduce(task.Index)
 
 		writeReduceOutput(kvMap, task.Index)
-
+		reportReduceTask(w.client, task)
 		time.Sleep(2 * time.Second)
 		if !ok {
 			time.Sleep(100 * time.Millisecond)

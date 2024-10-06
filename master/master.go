@@ -48,6 +48,21 @@ func (m *Master) ReportTask(args *shared.ReportMapTaskArgs, reply *shared.Report
 	return fmt.Errorf("task with index %d not found", args.Task.Index)
 }
 
+func (m *Master) ReportReduceTask(args *shared.ReportReduceTaskArgs, reply *shared.ReportReduceTaskReply) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for i, t := range m.reduceTasks {
+		if t.Index == args.Task.Index {
+			m.reduceTasks[i].Status = shared.Finished
+			m.nReduce--
+			return nil
+		}
+	}
+
+	return fmt.Errorf("task with index %d not found", args.Task.Index)
+}
+
 func (m *Master) GetReduceCount(args *shared.GetReduceCountArgs, reply *shared.GetReduceCountReply) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -73,6 +88,7 @@ func (m *Master) GetReduceTask(args *shared.GetReduceTaskArgs, reply *shared.Get
 	}
 
 	for i, task := range m.reduceTasks {
+
 		if task.Status == shared.NotStarted {
 			m.reduceTasks[i].Status = shared.InProgress
 			reply.Task = m.reduceTasks[i]
@@ -125,8 +141,6 @@ func (m *Master) cleanupTempDir() {
 	err := os.RemoveAll(shared.TempDir)
 	if err != nil {
 		log.Printf("Error removing temporary directory %s: %v\n", shared.TempDir, err)
-	} else {
-		log.Printf("Temporary directory %s removed successfully\n", shared.TempDir)
 	}
 }
 

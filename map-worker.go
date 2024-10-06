@@ -114,6 +114,7 @@ func (w *MapWorker) run() {
 	fmt.Println("reduceCount: ", reduceCount)
 
 	for {
+
 		task, ok := getMapTask(w.client)
 
 		if task.Type == shared.ExitTask {
@@ -131,6 +132,7 @@ func (w *MapWorker) run() {
 			writeMapOutput(kv, task.Index)
 			reportMapTask(w.client, task)
 		}
+
 	}
 
 	//fmt.Println(task, ok)
