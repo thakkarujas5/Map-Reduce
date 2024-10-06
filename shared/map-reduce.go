@@ -8,6 +8,7 @@ import (
 	"mr/worker"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 const TempDir = "./tmp"
@@ -87,9 +88,8 @@ func Reduce(index int) map[string][]string {
 	return kvMap
 }
 
-func performReduce(reduceArray []string) {
-	fmt.Println("arr: ", reduceArray)
-
+func PerformReduce(reduceArray []string) string {
+	return strconv.Itoa(len(reduceArray))
 }
 
 type GetMapTaskArgs struct {

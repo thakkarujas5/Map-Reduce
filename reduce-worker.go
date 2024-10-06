@@ -31,7 +31,6 @@ func writeReduceOutput(kvMap map[string][]string, reduceId int) {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-
 	// Create temp file
 	filePath := fmt.Sprintf("%v/mr-out-%v-%v", shared.TempDir, reduceId, os.Getpid())
 	file, err := os.Create(filePath)
@@ -40,17 +39,17 @@ func writeReduceOutput(kvMap map[string][]string, reduceId int) {
 	// Call reduce and write to temp file
 	for _, k := range keys {
 
-		fmt.Println("k: ", k, ":", shared.performReduce(kvMap[k]))
-		// v := reducef(k, kvMap[k])
-		// _, err := fmt.Fprintf(file, "%v %v\n", k, reducef(k, kvMap[k]))
-		// checkError(err, "Cannot write mr output (%v, %v) to file", k, v)
+		v := shared.PerformReduce(kvMap[k])
+		_, err := fmt.Fprintf(file, "%v %v\n", k, shared.PerformReduce(kvMap[k]))
+		checkError(err, "Cannot write mr output (%v, %v) to file", k, v)
 	}
 
 	// // atomically rename temp files to ensure no one observes partial files
 	// file.Close()
-	// newPath := fmt.Sprintf("mr-out-%v", reduceId)
-	// err = os.Rename(filePath, newPath)
-	// checkError(err, "Cannot rename file %v\n", filePath)
+	//fmt.Println("%v/mr-out-%v", "out", reduceId)
+	newPath := fmt.Sprintf("mr-out-%v", reduceId)
+	err = os.Rename(filePath, newPath)
+	checkError(err, "Cannot rename file %v\n", filePath)
 }
 
 func checkError(err error, format string, v ...interface{}) {

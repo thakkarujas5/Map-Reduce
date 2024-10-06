@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/rpc"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -114,9 +115,42 @@ func (m *Master) GetTask(args *shared.GetMapTaskArgs, reply *shared.GetMapTaskRe
 	return nil
 }
 
+func (m *Master) cleanupTempDir() {
+	err := os.RemoveAll(shared.TempDir)
+	if err != nil {
+		log.Printf("Error removing temporary directory %s: %v\n", shared.TempDir, err)
+	} else {
+		log.Printf("Temporary directory %s removed successfully\n", shared.TempDir)
+	}
+}
+
+func (m *Master) cleanupOutputFiles() {
+
+	files, err := os.ReadDir(".")
+	if err != nil {
+		log.Printf("Error reading current directory: %v\n", err)
+		return
+	}
+
+	for _, file := range files {
+		if !file.IsDir() && strings.HasPrefix(file.Name(), "mr-out") {
+			err := os.Remove(file.Name())
+			if err != nil {
+				log.Printf("Error removing file %s: %v\n", file.Name(), err)
+			} else {
+				log.Printf("File %s removed successfully\n", file.Name())
+			}
+		}
+	}
+
+}
+
 func MakeMaster(files []string, reduceTasks int) *Master {
 
 	master := Master{}
+
+	master.cleanupTempDir()
+	master.cleanupOutputFiles()
 
 	mapTasks := len(files)
 	master.nMap = mapTasks
